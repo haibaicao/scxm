@@ -1,0 +1,92 @@
+1、使用POST方法请求1：
+查询条件：
+{
+    "sqlxh": "100001",
+    "pageIndex": 2,
+    "pageSize": 3,
+    "queryParams": "[{\"name\":\"NSRSBH\",\"value\":\"51022219721231141901\",\"type\":\"string\"}]"
+}
+请求地址：http://127.0.0.1:8079/query
+参考方法：
+ function invokesql(sqlxh,param,successDo,pageIndex,pageSize){
+    let parr=[];
+    if(param){
+        $.each(param,function (k,v) {
+            if(v.includes(",")){
+                parr.push({name:k,value:v,type:"array"});
+            }else{
+                parr.push({name:k,value:v,type:"string"});
+            }
+        })
+    }
+    let reqparam = {};
+    reqparam.sqlxh=sqlxh;
+    reqparam.pageIndex=pageIndex==null?1:pageIndex;
+    reqparam.pageSize=pageSize==null?10000:pageSize;
+    reqparam.queryParams=JSON.stringify(parr);
+    let sqstr=Base64.encode(JSON.stringify(reqparam));
+    $.ajax({
+        type : 'post',
+        url : "query",
+        async : false,
+        globle : false,
+        data:{param:sqstr},
+        dataType : "json",
+        beforeSend : function() {
+        },
+        success : function(data) {
+            console.info(data);
+            if(successDo){
+                successDo(data);
+            }
+        }
+    });
+}
+
+2、使用POST方法请求2：
+查询条件：
+{
+    "sqlxh": "100001",
+    "pageIndex": 2,
+    "pageSize": 3,
+    "queryParams": "[{\"name\":\"NSRSBH\",\"value\":\"51022219721231141901\",\"type\":\"string\"}]"
+}
+请求：
+http://127.0.0.1:8079/invoke
+
+返回结果：
+{
+	"code":"00",
+	"data":"{\"total\":1,\"rows\":[{\"HYMC\":\"科学研究和技术服务业\",\"HY_DM\":\"M\",\"ROW_ID\":4}",
+	"messge":"查询成功",
+	"time":"19ms"
+}
+
+3、集合查询方法：
+SQL配置：
+select hy_dm,hymc
+from dm_gy_hy
+where 1=1
+and hy_dm in
+<foreach collection="hydm" item="hydmtmp" index="index" open="(" close=")" separator=",">
+ #{hydmtmp}
+</foreach>
+
+接口请求参数：
+{
+    "sqlxh": "100001",
+    "pageIndex": 1,
+    "pageSize": 50,
+    "queryParams": "[{\"name\":\"hydm\",\"value\":\"7297,7298,7299\",\"type\":\"arrays\"}]"
+}
+
+若以条件形式存在：
+select hy_dm,hymc
+from dm_gy_hy
+where 1=1
+<if test='hydm!=null and hydm.size()>0'>
+and hy_dm in
+<foreach collection="hydm" item="hydmtmp" index="index" open="(" close=")" separator=",">
+ #{hydmtmp}
+</foreach>
+</if>
